@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 
+from manimlib.mobject.coordinate_systems import Axes
 from manimlib.mobject.coordinate_systems import CoordinateSystem
 from manimlib.utils.simple_functions import binary_search
 
@@ -45,6 +46,42 @@ class CoordinateSystemTests(unittest.TestCase):
         )
         np.testing.assert_allclose(
             axes.input_to_graph_point(6.0, graph), [6.0, 3.0, 0.0]
+        )
+
+
+class BindGraphToFuncTests(unittest.TestCase):
+    def get_updated_frames(self, func, get_discontinuities, num_frames):
+        axes = Axes(x_range=(-4, 4), y_range=(-1, 4))
+        graph = axes.get_graph(func)
+        bound = axes.bind_graph_to_func(
+            graph, func, get_discontinuities=get_discontinuities
+        )
+        frames = []
+        for _ in range(num_frames):
+            bound.update(1 / 30)
+            frames.append((axes, bound.get_points().copy()))
+        return frames
+
+    def check_x_range_and_point_count_stable(self, func, get_discontinuities):
+        frames = self.get_updated_frames(func, get_discontinuities, 30)
+        _, first_points = frames[0]
+        for axes, points in frames:
+            xs = np.array([axes.x_axis.p2n(p) for p in points])
+            self.assertEqual(len(points), len(first_points))
+            self.assertAlmostEqual(xs.min(), -4.0, places=5)
+            self.assertAlmostEqual(xs.max(), 4.0, places=5)
+            np.testing.assert_allclose(points, first_points, atol=1e-8)
+
+    def test_x_range_stable_with_discontinuity(self):
+        self.check_x_range_and_point_count_stable(
+            lambda x: 1.0 / x,
+            get_discontinuities=lambda: [0.0],
+        )
+
+    def test_x_range_stable_without_discontinuity(self):
+        self.check_x_range_and_point_count_stable(
+            lambda x: x ** 2,
+            get_discontinuities=None,
         )
 
 
