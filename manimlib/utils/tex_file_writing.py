@@ -166,7 +166,10 @@ def check_svg_glyph_defs(svg: str) -> None:
     # dvisvgm -n emits glyphs as <use> references to <defs> entries. If it could
     # not find the font outlines (e.g. Type 1 fonts missing on MiKTeX), the defs
     # are left empty and the references dangle.
-    root = ET.fromstring(svg)
+    try:
+        root = ET.fromstring(svg)
+    except ET.ParseError:
+        return
     defined_ids = {elem.get("id") for elem in root.iter()}
     missing = []
     for elem in root.iter():
