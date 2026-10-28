@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 import numbers
 
 import numpy as np
-import itertools as it
 
 from manimlib.constants import BLACK, BLUE, BLUE_D, BLUE_E, GREEN, GREY_A, RED, DEFAULT_MOBJECT_COLOR
 from manimlib.constants import DEG, PI
@@ -266,12 +265,14 @@ class CoordinateSystem(ABC):
         x_values = np.array([self.x_axis.p2n(p) for p in graph.get_points()])
 
         def get_graph_points():
-            xs = x_values
+            xs = x_values.copy()
             if get_discontinuities:
-                ds = get_discontinuities()
                 ep = 1e-6
-                added_xs = it.chain(*((d - ep, d + ep) for d in ds))
-                xs[:] = sorted([*x_values, *added_xs])[:len(x_values)]
+                for d in get_discontinuities():
+                    if not xs[0] < d < xs[-1]:
+                        continue
+                    i = np.searchsorted(xs, d)
+                    xs[i - 1:i + 1] = [d - ep, d + ep]
             return self.c2p(xs, func(xs))
 
         graph.add_updater(
