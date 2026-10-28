@@ -74,6 +74,9 @@ Directly (Windows)
    FFmpeg <https://www.wikihow.com/Install-FFmpeg-on-Windows>`__, and make sure that its path is in the PATH environment variable.
 2. Install a LaTeX distribution.
    `TeXLive-full <http://tug.org/texlive/>`__ is recommended.
+   If you use `MiKTeX <https://miktex.org/download>`__, also install the ``cm-super`` package:
+   run ``mpm --install=cm-super`` and then ``initexmf --mkmaps``. Without it, dvisvgm cannot
+   embed the font outlines and Manim fails with an error about undefined glyphs.
 3. Install the remaining Python packages.
 
 .. code-block:: sh
