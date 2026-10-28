@@ -53,7 +53,12 @@ def initialize_manim_config() -> Dict:
 
 def parse_cli():
     try:
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(
+            description="ManimGL: the 3Blue1Brown version of Manim (pip package `manimgl`, imported as `manimlib`).",
+            epilog="This is not Manim Community Edition (pip package `manim`, imported as `manim`). "
+                   "Code, docs and issues for the two versions are not interchangeable; "
+                   "for Community Edition see https://github.com/ManimCommunity/manim",
+        )
         module_location = parser.add_mutually_exclusive_group()
         module_location.add_argument(
             "file",

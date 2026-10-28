@@ -46,6 +46,15 @@ def run_scenes():
             break
 
 
+VERSION_NOTE = (
+    "\033[2mNote: this is ManimGL (`pip install manimgl`, `from manimlib import *`), "
+    "not Manim Community Edition (`pip install manim`, `from manim import *`).\n"
+    "The two are not interchangeable. Report ManimGL issues at "
+    "https://github.com/3b1b/manim/issues and Community Edition issues at "
+    "https://github.com/ManimCommunity/manim/issues\033[0m"
+)
+
+
 def main():
     """
     Main entry point for ManimGL.
@@ -54,6 +63,7 @@ def main():
 
     args = parse_cli()
     if args.version and args.file is None:
+        print(VERSION_NOTE)
         return
     if args.clear_cache:
         clear_cache()
