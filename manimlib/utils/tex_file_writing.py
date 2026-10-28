@@ -5,6 +5,7 @@ import re
 import yaml
 import subprocess
 from functools import lru_cache
+from xml.etree import ElementTree as ET
 
 from pathlib import Path
 import tempfile
@@ -153,11 +154,38 @@ def full_tex_to_svg(full_tex: str, compiler: str = "latex", message: str = ""):
 
     # Return SVG string
     result = process.stdout.decode("utf-8")
+    check_svg_glyph_defs(result)
 
     if message:
         print(" " * len(message), end="\r")
 
     return result
+
+
+def check_svg_glyph_defs(svg: str) -> None:
+    # dvisvgm -n emits glyphs as <use> references to <defs> entries. If it could
+    # not find the font outlines (e.g. Type 1 fonts missing on MiKTeX), the defs
+    # are left empty and the references dangle.
+    try:
+        root = ET.fromstring(svg)
+    except ET.ParseError:
+        return
+    defined_ids = {elem.get("id") for elem in root.iter()}
+    missing = []
+    for elem in root.iter():
+        if elem.tag.split("}")[-1] != "use":
+            continue
+        href = elem.get("{http://www.w3.org/1999/xlink}href") or elem.get("href") or ""
+        if href.startswith("#") and href[1:] not in defined_ids:
+            missing.append(href[1:])
+    if missing:
+        raise LatexError(
+            "dvisvgm could not embed the font outlines for the LaTeX output "
+            f"(glyphs {', '.join(missing[:5])} are referenced but not defined). "
+            "This usually means the Type 1 fonts are not installed. On MiKTeX, "
+            "run `mpm --install=cm-super` followed by `initexmf --mkmaps`, "
+            "or add `\\usepackage{lmodern}` to the TeX template."
+        )
 
 
 class LatexError(Exception):

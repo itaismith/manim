@@ -109,6 +109,7 @@ sudo apt install python3.12-venv
 
 1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
 2. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
+   If you use MiKTeX, also install the `cm-super` package: run `mpm --install=cm-super` and then `initexmf --mkmaps`. Without it, dvisvgm cannot embed the font outlines and Manim fails with an error about undefined glyphs.
 3. Install the remaining Python packages.
     ```sh
     git clone https://github.com/3b1b/manim.git
