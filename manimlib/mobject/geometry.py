@@ -508,9 +508,11 @@ class Ellipse(Circle):
         height: float = 1.0,
         **kwargs
     ):
+        kwargs["radius"] = 1.0
         super().__init__(**kwargs)
-        self.set_width(width, stretch=True)
-        self.set_height(height, stretch=True)
+        center = np.array(kwargs.get("arc_center", ORIGIN), dtype=float)
+        self.stretch(width / 2, 0, about_point=center)
+        self.stretch(height / 2, 1, about_point=center)
 
 
 class AnnularSector(VMobject):
