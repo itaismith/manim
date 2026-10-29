@@ -38,35 +38,37 @@ fn grid_point(rc: vec2i) -> vec3f {
 }
 
 /*
-Which way the surface faces at a point of the grid, from the directions it runs in either
-way from there, crossed with one another. Stepping to both neighbors, rather than to one,
-keeps this from depending on which corner of which square a vertex is, and clamping at the
-edges of the grid leaves the step one sided there.
+Which way the surface faces at a point of the grid, from the directions it runs in along
+each of its two axes, crossed with one another. See grid_tangent.
 */
 fn grid_normal(rc: vec2i) -> vec3f {
-    let row = vec2i(1, 0);
-    let col = vec2i(0, 1);
-    var du = grid_point(rc + row) - grid_point(rc - row);
-    var dv = grid_point(rc + col) - grid_point(rc - col);
-    /*
-    A row or column of the grid may be a single point, as at the pole of a sphere, where
-    stepping along it gets nowhere. A neighboring row or column stands in then, either side
-    serving for whichever end of the grid it happens to be, since a step off the grid is
-    clamped back onto the same row.
-    */
-    if (length(du) < DEGENERATE_STEP) {
-        du = grid_point(rc + row + col) - grid_point(rc - row + col);
-    }
-    if (length(du) < DEGENERATE_STEP) {
-        du = grid_point(rc + row - col) - grid_point(rc - row - col);
-    }
-    if (length(dv) < DEGENERATE_STEP) {
-        dv = grid_point(rc + col + row) - grid_point(rc - col + row);
-    }
-    if (length(dv) < DEGENERATE_STEP) {
-        dv = grid_point(rc + col - row) - grid_point(rc - col - row);
-    }
+    let du = grid_tangent(rc, vec2i(1, 0), vec2i(0, 1));
+    let dv = grid_tangent(rc, vec2i(0, 1), vec2i(1, 0));
     return normalize(cross(du, dv));
+}
+
+/*
+The step along one axis of the grid at a point, to the points either side of it. Where that
+gets nowhere, as at the pole of a sphere, or where the points either side coincide, as across
+the seam of a grid which wraps all the way round with only three rows, a neighboring row or
+column stands in, and failing that the step is taken one sided. Clamping at the edges of the
+grid leaves each step one sided there anyway.
+*/
+fn grid_tangent(rc: vec2i, along: vec2i, across: vec2i) -> vec3f {
+    var offsets = array<vec2i, 3>(vec2i(0), across, -across);
+    for (var i = 0; i < 3; i++) {
+        let at = rc + offsets[i];
+        let delta = grid_point(at + along) - grid_point(at - along);
+        if (length(delta) >= DEGENERATE_STEP) { return delta; }
+    }
+    for (var i = 0; i < 3; i++) {
+        let at = rc + offsets[i];
+        let forward = grid_point(at + along) - grid_point(at);
+        if (length(forward) >= DEGENERATE_STEP) { return forward; }
+        let backward = grid_point(at) - grid_point(at - along);
+        if (length(backward) >= DEGENERATE_STEP) { return backward; }
+    }
+    return vec3f(0.0);
 }
 
 /*
